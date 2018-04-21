@@ -2,3 +2,4 @@ output/
 .idea/
 *.txt
 *.pdf
+__pycache__

@@ -170,3 +170,55 @@ def add_value(dict_, key, value):
     if key not in dict_:
         dict_[key] = 0
     dict_[key] += value
+
+
+def find(x, f):
+    if (x != f[x]):
+        f[x] = find(f[x], f)
+    return f[x]
+
+def max_label(index, labels):
+    freq = {}
+    f = {}
+
+    for i in index:
+        f[i] = i
+
+    for i in index:
+        for j in index:
+            root1 = find(i, f)
+            root2 = find(j, f)
+            if root1 != root2:
+                if len(labels[i].intersection(labels[j])) > 0:
+                    f[root1] = root2
+
+    label_ = ''
+    e = 0.0
+
+    for i in index:
+        print("label: {}, f[i]: {}, i: {}".format(labels[i], f[i], i))
+        if f[i] not in freq.keys():
+            freq[f[i]] = 0
+        freq[f[i]] += 1
+        if e < freq[f[i]]:
+            e = freq[f[i]]
+            label_ = labels[f[i]]
+
+    print("e: {}, label: {}".format(e, label_))
+    print(len(index))
+    return label_, float(e) / len(index)
+
+
+def calculate_purity(centroids_, cluster_assign_, labels, k):
+    purity = 0.0
+    m = cluster_assign_.shape[0]
+
+    for i in range(k):
+        in_class_dataSet = np.where(cluster_assign_[:, 0] == i)[0]
+        label_, p = max_label(in_class_dataSet, labels)
+        print(p)
+        print("{} / {} = {}".format(float(len(in_class_dataSet)), m, float(len(in_class_dataSet)) / m))
+        purity += p * float(len(in_class_dataSet)) / m
+        print("purity: {}".format(purity))
+
+    return purity

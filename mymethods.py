@@ -6,8 +6,9 @@ import numpy as np
 
 from classifier.knn_classifier import KNNClassifier
 from classifier.naive_bayes_classifier import NaiveBayesClassifier
+from clusters.kmeans import Kmeans
 from data_structure.data_structure import StaticData
-from metric.metric import calculate_tf_idf, add_value
+from metric.metric import calculate_tf_idf, add_value, calculate_purity
 
 
 def derivative_feature_vectors(_vocabulary):
@@ -122,6 +123,29 @@ def naive_predict(feature_vector,
     return y_predict
 
 
+def kmeans_cluster(feature_vector,
+                   y_train_original,
+                   test_feature_matrix,
+                   feature_matrix,
+                   y_test_original):
+    kmeas_cluster_ = Kmeans()
+    labels = y_train_original
+    purity = []
+
+    for k in range(2, 44, 10):
+        StaticData.A1 = time.time()
+        centroids, cluster_assign = kmeas_cluster_.fit(dataSet=feature_matrix, k=k)
+        purity.append(calculate_purity(centroids, cluster_assign, labels, k))
+
+        StaticData.kmeans_cluster_time.append(time.time() - StaticData.A1)
+        print("Time to cluster: {} s."
+              .format(StaticData.kmeans_cluster_time[len(StaticData.kmeans_cluster_time) - 1]))
+
+        print("\nKmeans Cluster: The number of clusters : k - k is {}, purity is: {}.".format(k, purity))
+    StaticData.kmeans_purity = purity
+    return purity
+
+
 def generate_dataset(documents, vocab):
     # check whether the subdirectory exists or not if not create a subdirectory
     subdirectory = "output"
@@ -217,3 +241,75 @@ def write_termination_messages(filename):
                           .format(StaticData.naive_predict_time[1]))
         writer.close()
     print("Finish writing data to {}.\n".format(filename))
+
+
+# pipeline
+def knn_predict_showcase(feature_vector_1, feature_vector_2, train_documents, test_documents, Y_test_original):
+    """ knn predict """
+    print("\n++++++++++ Start predicting ++++++++++")
+    print("Select two classifiers: knn classifier and naive bayes classifier.")
+    print("\n========== KNN Classifier ==========")
+    print("Select k = 5 as the number of neighbors.")
+    print("\nPredict using feature vector 1 ({} cardinality):".format(len(feature_vector_1)))
+    print("")
+    StaticData.A1 = time.time()
+    feature_matrix_1 = generate_tf_idf_feature(feature_vector_1, train_documents)
+
+    Y_knn_128_predict, Y_knn_128_accuracy = knn_predict(feature_vector=feature_vector_1,
+                                                        train_documents=train_documents,
+                                                        test_documents=test_documents,
+                                                        feature_matrix=feature_matrix_1,
+                                                        y_test_original=Y_test_original)
+    write_predict(Y_test_original, Y_knn_128_predict, "KNN_predict_class_labels_125_feature_vector.txt")
+    print("\nPredict using feature vector 2 ({} cardinality):".format(len(feature_vector_2)))
+    StaticData.A1 = time.time()
+    feature_matrix_2 = generate_tf_idf_feature(feature_vector_2, train_documents)
+    Y_knn_256_predict, Y_knn_256_accuracy = knn_predict(feature_vector=feature_vector_2,
+                                                        train_documents=train_documents,
+                                                        test_documents=test_documents,
+                                                        feature_matrix=feature_matrix_2,
+                                                        y_test_original=Y_test_original)
+    write_predict(Y_test_original, Y_knn_256_predict, "KNN_predict_class_labels_270_feature_vector.txt")
+
+
+def naive_predict_showcase(feature_vector_1, feature_vector_2, vocabulary_, train_documents, test_documents,
+                           Y_test_original):
+    """ Naive Bayes predict """
+    print("\n========== Naive Bayes Classifier ==========")
+    print("\nPredict using feature vector 1 ({} cardinality):".format(len(feature_vector_1)))
+    Y_naive_128_predict = naive_predict(feature_vector_1,
+                                        vocabulary_,
+                                        train_documents,
+                                        test_documents,
+                                        Y_test_original)
+    write_predict(Y_test_original, Y_naive_128_predict, "Naive_predict_class_labels_125_feature_vector.txt")
+    print("\nPredict using feature vector 2 ({} cardinality):".format(len(feature_vector_2)))
+    Y_naive_256_predict = naive_predict(feature_vector_2,
+                                        vocabulary_,
+                                        train_documents,
+                                        test_documents,
+                                        Y_test_original)
+    write_predict(Y_test_original, Y_naive_256_predict, "Naive_predict_class_labels_270_feature_vector.txt")
+
+    print("\n========== Termination message ==========")
+    print("Mission completed.")
+    print("We select knn classifier and naive classifier.")
+    print("\nFor feature vector with {} cardinality:".format(len(feature_vector_1)))
+    print("\nThe accuracy of knn classifier is {}.".format(StaticData.knn_accuracy[0]))
+    print("The offline efficient cost of knn classifier is {} s.".format(StaticData.knn_build_time[0]))
+    print("The online efficient cost of knn classifier is {} s.".format(StaticData.knn_predict_time[0]))
+
+    print("\nThe accuracy of naive classifier is {}.".format(StaticData.naiver_accuracy[0]))
+    print("The offline efficient cost of naive classifier is {} s.".format(StaticData.naive_build_time[0]))
+    print("The online efficient cost of naive classifier is {} s.".format(StaticData.naive_predict_time[0]))
+
+    print("\nFor feature vector with {} cardinality:".format(len(feature_vector_2)))
+    print("\nThe accuracy of knn classifier is {}.".format(StaticData.knn_accuracy[1]))
+    print("The offline efficient cost of knn classifier is {} s.".format(StaticData.knn_build_time[1]))
+    print("The online efficient cost of knn classifier is {} s.".format(StaticData.knn_predict_time[1]))
+
+    print("\nThe accuracy of naive classifier is {}.".format(StaticData.naiver_accuracy[1]))
+    print("The offline efficient cost of naive classifier is {} s.".format(StaticData.naive_build_time[1]))
+    print("The online efficient cost of naive classifier is {} s.".format(StaticData.naive_predict_time[1]))
+
+    write_termination_messages("termination_messages.txt")

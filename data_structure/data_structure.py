@@ -70,8 +70,10 @@ class StaticData:
     knn_predict_time = []
     naive_build_time = []
     naive_predict_time = []
+    kmeans_cluster_time = []
     A1 = 0.0
 
     """ accuracy """
     knn_accuracy = []
     naiver_accuracy = []
+    kmeans_purity = []
