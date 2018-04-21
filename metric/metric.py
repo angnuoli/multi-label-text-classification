@@ -177,6 +177,7 @@ def find(x, f):
         f[x] = find(f[x], f)
     return f[x]
 
+
 def max_label(index, labels):
     freq = {}
     f = {}
@@ -222,3 +223,7 @@ def calculate_purity(centroids_, cluster_assign_, labels, k):
         print("purity: {}".format(purity))
 
     return purity
+
+
+def euclidean(x_, y_):
+    return np.linalg.norm(x_ - y_)

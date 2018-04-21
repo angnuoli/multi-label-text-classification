@@ -6,6 +6,7 @@ import numpy as np
 
 from classifier.knn_classifier import KNNClassifier
 from classifier.naive_bayes_classifier import NaiveBayesClassifier
+from clusters.DBSCAN import DBSCAN
 from clusters.kmeans import Kmeans
 from data_structure.data_structure import StaticData
 from metric.metric import calculate_tf_idf, add_value, calculate_purity
@@ -144,6 +145,20 @@ def kmeans_cluster(feature_vector,
         print("\nKmeans Cluster: The number of clusters : k - k is {}, purity is: {}.".format(k, purity))
     StaticData.kmeans_purity = purity
     return purity
+
+
+def dbscan_cluster(train_feature_matrix,
+                   y_train_original,
+                   test_feature_matrix=None,
+                   y_test_original=None,
+                   epsilon=5,
+                   min_pts=5):
+    print("epsilon: {}, min_pts: {}".format(epsilon, min_pts))
+    dbscan_cluster = DBSCAN(epsilon, min_pts)
+    # dbscan_cluster.find_epsilon(train_feature_matrix)
+    clusters = dbscan_cluster.fit(train_feature_matrix, y_train_original)
+    purity = dbscan_cluster.calculate_purity(clusters, y_train_original)
+    return clusters, purity
 
 
 def generate_dataset(documents, vocab):
@@ -313,3 +328,31 @@ def naive_predict_showcase(feature_vector_1, feature_vector_2, vocabulary_, trai
     print("The online efficient cost of naive classifier is {} s.".format(StaticData.naive_predict_time[1]))
 
     write_termination_messages("termination_messages.txt")
+
+
+def kmeans_showcase(feature_vector_1, feature_vector_2, Y_train_original, Y_test_original, train_documents,
+                    test_documents):
+    """Kmeans clustering"""
+    print("\n++++++++++ Start clustering ++++++++++")
+    print("Select two clusters: kmeans cluster.")
+    print("\n========== Kmeans Cluster ==========")
+    print("Select k = 5 as the number of neighbors.")
+    print("\nCluster using feature vector 1 ({} cardinality):".format(len(feature_vector_1)))
+    print("")
+    StaticData.A1 = time.time()
+    feature_matrix_1 = generate_tf_idf_feature(feature_vector_1, train_documents)
+
+    kmeans_cluster(feature_vector=feature_vector_1,
+                   y_train_original=Y_train_original,
+                   test_feature_matrix=feature_matrix_1,
+                   feature_matrix=feature_matrix_1,
+                   y_test_original=Y_test_original)
+
+    print("\nCluster using feature vector 2 ({} cardinality):".format(len(feature_vector_2)))
+    StaticData.A1 = time.time()
+    feature_matrix_2 = generate_tf_idf_feature(feature_vector_2, train_documents)
+    kmeans_cluster(feature_vector=feature_vector_2,
+                   y_train_original=Y_train_original,
+                   test_feature_matrix=feature_matrix_2,
+                   feature_matrix=feature_matrix_2,
+                   y_test_original=Y_test_original)

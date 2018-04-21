@@ -77,3 +77,9 @@ class StaticData:
     knn_accuracy = []
     naiver_accuracy = []
     kmeans_purity = []
+
+    """ find good parameter """
+    dbscan_k_distance = []
+    dbscan_core_points = set()
+    dbscan_labels = []
+    edges = {}
