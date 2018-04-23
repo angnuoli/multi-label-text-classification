@@ -1,10 +1,9 @@
-import time
+from random import choice
 
-import matplotlib.pyplot as plt
+import numpy as np
 
 from data_structure.data_structure import StaticData
 from metric.metric import euclidean
-from random import choice
 
 
 class DBSCAN:
@@ -29,10 +28,6 @@ class DBSCAN:
 
         k_distance = sorted(k_distance)
         StaticData.dbscan_k_distance = k_distance
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        ax.plot(k_distance)
-        plt.savefig('distance-{}.png'.format(time.time()))
 
     def preprocess(self, X):
         """
@@ -45,12 +40,15 @@ class DBSCAN:
 
         m = X.shape[0]
 
+        print("Compute the distance matrix between each point...")
         if len(StaticData.edges) == 0:
             edges = {}
             for i in range(m):
                 edges[i] = {}
+
+            for i in range(m):
                 for j in range(i + 1, m):
-                    edges[i][j] = euclidean(X[i], X[j])
+                    edges[j][i] = edges[i][j] = np.linalg.norm(X[i] - X[j])
 
             StaticData.edges = edges
 
@@ -58,9 +56,11 @@ class DBSCAN:
 
         for i in range(m):
             edges[i] = {}
+
+        for i in range(m):
             for j in range(i+1, m):
                 if StaticData.edges[i][j] <= self.epsilon:
-                    edges[i][j] = StaticData.edges[i][j]
+                    edges[j][i] = edges[i][j] = StaticData.edges[i][j]
 
             if len(edges[i].keys()) >= self.min_pts:
                 self.core_points.add(i)
@@ -68,8 +68,8 @@ class DBSCAN:
         self.edges = edges
         return edges
 
-
-    def purity_in_class(self, index, labels):
+    @staticmethod
+    def purity_in_class(index, labels):
         freq = {}
 
         for i in index:
@@ -100,8 +100,7 @@ class DBSCAN:
 
         return purity / total
 
-    def fit(self, X, y):
-        print("epsilon: {}, min_pts: {}".format(self.epsilon, self.min_pts))
+    def fit(self, X):
         matrix = self.preprocess(X)
         core_points = set(self.core_points)
         k = 0

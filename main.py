@@ -5,9 +5,7 @@ from sys import argv
 from data_preprocess.preprocess import DataProcessor, MyVectorizer
 from data_structure.data_structure import StaticData
 from mymethods import derivative_feature_vectors, generate_tf_idf_feature, write_to_file, \
-    dbscan_cluster
-from random import choice
-import matplotlib.pyplot as plt
+    dbscan_cluster, kmeans_cluster
 
 if __name__ == "__main__":
 
@@ -21,7 +19,9 @@ if __name__ == "__main__":
         raise OSError('Please store original data files in data/ directory or type '
                       '"python3 main.py data_path" to input path of data')
 
-    """ Preprocessing """
+    # =============================================================================
+    #   Preprocessing
+    # =============================================================================
     print("========== Parse data files ==========")
     data_dir = os.path.abspath(data_dir)
     data_processor = DataProcessor()
@@ -55,38 +55,75 @@ if __name__ == "__main__":
     print("Generate feature vector 2 which has a cardinality 270...")
     write_to_file(feature_vector_2, "feature_vector_2.csv")
 
-    """DBSCAN clustering"""
+    # compute two feature matrix
+    feature_matrix_1 = generate_tf_idf_feature(feature_vector_1, train_documents)
+    feature_matrix_2 = generate_tf_idf_feature(feature_vector_1, train_documents)
+
+    print("\n++++++++++ Start clustering ++++++++++")
+    print("Select two clusters: kmeans cluster and DBSCAN cluster.")
+
+    # =============================================================================
+    #   Kmeans clustering
+    # =============================================================================
+
+    print("\n========== Kmeans Cluster ==========")
+    print("Select k = 5 as the number of neighbors.")
+    print("\nCluster using feature vector 1 ({} cardinality):".format(len(feature_vector_1)))
+    print("")
+    StaticData.A1 = time.time()
+
+    kmeans_cluster(y_train_original=Y_train_original,
+                   feature_matrix=feature_matrix_1,
+                   )
+
+    print("\nCluster using feature vector 2 ({} cardinality):".format(len(feature_vector_2)))
+    StaticData.A1 = time.time()
+    kmeans_cluster(y_train_original=Y_train_original,
+                   feature_matrix=feature_matrix_2,
+                   )
+
+    # =============================================================================
+    #   DBSCAN clustering
+    # =============================================================================
     print("\n========== DBSCAN Cluster ==========")
-    print("Select episilon = 5 and MinPts = 5.")
+
+    epsilon = 4
+    min_pts = 1
+
+    print("Select epsilon = {} and MinPts = {}.".format(epsilon, min_pts))
     print("\nCluster using feature vector 1 ({} cardinality):".format(len(feature_vector_1)))
     print("")
 
-    feature_matrix_1 = generate_tf_idf_feature(feature_vector_1, train_documents)
+    StaticData.A1 = time.time()
+    clusters, p = dbscan_cluster(train_feature_matrix=feature_matrix_1, y_train_original=Y_train_original,
+                                 epsilon=epsilon, min_pts=min_pts)
+    print("Time to cluster: {} s."
+          .format(time.time() - StaticData.A1))
+    print("The purity is {}.".format(p))
+    print("clusters num: {}".format(len(clusters)))
 
+    #    sum = 0
+    #    for i in clusters.values():
+    #        sum += len(i)
+    # print("Sum is {}".format(sum))
 
-    purity = {}
-    for d in range(1, 30, 4):
-        purity[d] = []
-        for min_pts in range(1, 7):
-            StaticData.A1 = time.time()
-            clusters, p = dbscan_cluster(train_feature_matrix=feature_matrix_1, y_train_original=Y_train_original, epsilon=float(d)/100, min_pts=min_pts)
-            print("Time to cluster: {} s."
-                      .format(time.time() - StaticData.A1))
-            print(p)
-            print("clusters num: {}".format(len(clusters)))
-            purity[d].append(p)
+    StaticData.edges = {}
 
-        fig = plt.figure()
-        plt.plot(range(2,7), purity[d])
-        plt.ylabel('purity')
-        plt.xlabel('min_pts')
-        plt.title('epsilon = {}'.format(float(d)/10))
+    epsilon = 4
+    min_pts = 1
 
-    cc = []
-    xx = list(purity.keys())
-    xx = sorted(xx)
-    for i in xx:
-        cc.append(purity[i][0])
+    print("\nCluster using feature vector 2 ({} cardinality):".format(len(feature_vector_2)))
+    print("")
 
-    fig = plt.figure()
-    plt.plot(xx, cc)
+    StaticData.A1 = time.time()
+    clusters, p = dbscan_cluster(train_feature_matrix=feature_matrix_2, y_train_original=Y_train_original,
+                                 epsilon=epsilon, min_pts=min_pts)
+    print("Time to cluster: {} s."
+          .format(time.time() - StaticData.A1))
+    print("The purity is {}.".format(p))
+    print("clusters num: {}".format(len(clusters)))
+
+#    sum = 0
+#    for i in clusters.values():
+#        sum += len(i)
+#    # print("Sum is {}".format(sum))

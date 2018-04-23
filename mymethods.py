@@ -124,40 +124,36 @@ def naive_predict(feature_vector,
     return y_predict
 
 
-def kmeans_cluster(feature_vector,
-                   y_train_original,
-                   test_feature_matrix,
+def kmeans_cluster(y_train_original,
                    feature_matrix,
-                   y_test_original):
-    kmeas_cluster_ = Kmeans()
+                   k=80
+                   ):
+    kmeans_cluster_ = Kmeans()
     labels = y_train_original
     purity = []
 
-    for k in range(2, 44, 10):
-        StaticData.A1 = time.time()
-        centroids, cluster_assign = kmeas_cluster_.fit(dataSet=feature_matrix, k=k)
-        purity.append(calculate_purity(centroids, cluster_assign, labels, k))
+    StaticData.A1 = time.time()
+    centroids, cluster_assign = kmeans_cluster_.fit(data_set=feature_matrix, k=k)
+    purity.append(calculate_purity(centroids, cluster_assign, labels, k))
 
-        StaticData.kmeans_cluster_time.append(time.time() - StaticData.A1)
-        print("Time to cluster: {} s."
-              .format(StaticData.kmeans_cluster_time[len(StaticData.kmeans_cluster_time) - 1]))
+    StaticData.kmeans_cluster_time.append(time.time() - StaticData.A1)
+    print("Time to cluster: {} s."
+          .format(StaticData.kmeans_cluster_time[len(StaticData.kmeans_cluster_time) - 1]))
 
-        print("\nKmeans Cluster: The number of clusters : k - k is {}, purity is: {}.".format(k, purity))
+    print("\nKmeans Cluster: The number of clusters : k is {}, purity is: {}.".format(k, purity))
+
     StaticData.kmeans_purity = purity
     return purity
 
 
 def dbscan_cluster(train_feature_matrix,
                    y_train_original,
-                   test_feature_matrix=None,
-                   y_test_original=None,
                    epsilon=5,
                    min_pts=5):
-    print("epsilon: {}, min_pts: {}".format(epsilon, min_pts))
-    dbscan_cluster = DBSCAN(epsilon, min_pts)
+    DBSCAN_cluster = DBSCAN(epsilon, min_pts)
     # dbscan_cluster.find_epsilon(train_feature_matrix)
-    clusters = dbscan_cluster.fit(train_feature_matrix, y_train_original)
-    purity = dbscan_cluster.calculate_purity(clusters, y_train_original)
+    clusters = DBSCAN_cluster.fit(train_feature_matrix)
+    purity = DBSCAN_cluster.calculate_purity(clusters, y_train_original)
     return clusters, purity
 
 
@@ -330,8 +326,7 @@ def naive_predict_showcase(feature_vector_1, feature_vector_2, vocabulary_, trai
     write_termination_messages("termination_messages.txt")
 
 
-def kmeans_showcase(feature_vector_1, feature_vector_2, Y_train_original, Y_test_original, train_documents,
-                    test_documents):
+def kmeans_showcase(feature_vector_1, feature_vector_2, Y_train_original, train_documents):
     """Kmeans clustering"""
     print("\n++++++++++ Start clustering ++++++++++")
     print("Select two clusters: kmeans cluster.")
@@ -342,17 +337,11 @@ def kmeans_showcase(feature_vector_1, feature_vector_2, Y_train_original, Y_test
     StaticData.A1 = time.time()
     feature_matrix_1 = generate_tf_idf_feature(feature_vector_1, train_documents)
 
-    kmeans_cluster(feature_vector=feature_vector_1,
-                   y_train_original=Y_train_original,
-                   test_feature_matrix=feature_matrix_1,
-                   feature_matrix=feature_matrix_1,
-                   y_test_original=Y_test_original)
+    kmeans_cluster(y_train_original=Y_train_original,
+                   feature_matrix=feature_matrix_1)
 
     print("\nCluster using feature vector 2 ({} cardinality):".format(len(feature_vector_2)))
     StaticData.A1 = time.time()
     feature_matrix_2 = generate_tf_idf_feature(feature_vector_2, train_documents)
-    kmeans_cluster(feature_vector=feature_vector_2,
-                   y_train_original=Y_train_original,
-                   test_feature_matrix=feature_matrix_2,
-                   feature_matrix=feature_matrix_2,
-                   y_test_original=Y_test_original)
+    kmeans_cluster(y_train_original=Y_train_original,
+                   feature_matrix=feature_matrix_2)
