@@ -3,3 +3,4 @@ output/
 *.txt
 *.pdf
 __pycache__
+*.png

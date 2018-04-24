@@ -1,6 +1,6 @@
 import numpy as np
 
-from data_structure.data_structure import StaticData
+from src.data_structure.data_structure import StaticData
 
 
 def calculate_tf_idf(tf, df, doc_num):
@@ -173,54 +173,87 @@ def add_value(dict_, key, value):
 
 
 def find(x, f):
-    if (x != f[x]):
+    if x != f[x]:
         f[x] = find(f[x], f)
     return f[x]
 
 
-def max_label(index, labels):
+def max_label_union_set(index, labels):
+    """
+    Use union set to detect documents between the same set.
+    Too high, 91%.
+
+    """
     freq = {}
     f = {}
 
     for i in index:
         f[i] = i
 
-    for i in index:
-        for j in index:
-            root1 = find(i, f)
-            root2 = find(j, f)
+    # print("index : {}".format(index))
+    m = len(index)
+    for i in range(m):
+        for j in range(i+1, m):
+            x = index[i]
+            y = index[j]
+            root1 = find(x, f)
+            root2 = find(y, f)
             if root1 != root2:
-                if len(labels[i].intersection(labels[j])) > 0:
+                if len(labels[x].intersection(labels[y])) > 0:
                     f[root1] = root2
 
     label_ = ''
     e = 0.0
 
     for i in index:
-        print("label: {}, f[i]: {}, i: {}".format(labels[i], f[i], i))
-        if f[i] not in freq.keys():
-            freq[f[i]] = 0
-        freq[f[i]] += 1
-        if e < freq[f[i]]:
-            e = freq[f[i]]
-            label_ = labels[f[i]]
+        # print("label: {}, f[i]: {}, i: {}".format(labels[i], f[i], i))
+        root = find(i, f)
+        if root not in freq.keys():
+            freq[root] = 0
+        freq[root] += 1
+        if e < freq[root]:
+            e = freq[root]
+            label_ = labels[root]
 
     print("e: {}, label: {}".format(e, label_))
     print(len(index))
     return label_, float(e) / len(index)
 
 
-def calculate_purity(centroids_, cluster_assign_, labels, k):
+def max_label(index, labels):
+    freq = {}
+
+    # print("index : {}".format(index))
+    label_ = ''
+    e = 0.0
+
+    for i in index:
+        for label in labels[i]:
+            if label not in freq.keys():
+                freq[label] = 0
+            freq[label] += 1
+            if e < freq[label]:
+                e = freq[label]
+                label_ = label
+
+    # print("e: {}, label: {}".format(e, label_))
+    # print(len(index))
+    return label_, float(e) / len(index)
+
+
+def calculate_purity(cluster_assign_, labels, k):
     purity = 0.0
     m = cluster_assign_.shape[0]
 
     for i in range(k):
         in_class_dataSet = np.where(cluster_assign_[:, 0] == i)[0]
+        if len(in_class_dataSet) == 0:
+            continue
         label_, p = max_label(in_class_dataSet, labels)
-        print(p)
-        print("{} / {} = {}".format(float(len(in_class_dataSet)), m, float(len(in_class_dataSet)) / m))
+        # print(p)
+        # print("{} / {} = {}".format(float(len(in_class_dataSet)), m, float(len(in_class_dataSet)) / m))
         purity += p * float(len(in_class_dataSet)) / m
-        print("purity: {}".format(purity))
+        # print("purity: {}".format(purity))
 
     return purity
 

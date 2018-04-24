@@ -4,12 +4,12 @@ import time
 
 import numpy as np
 
-from classifier.knn_classifier import KNNClassifier
-from classifier.naive_bayes_classifier import NaiveBayesClassifier
-from clusters.DBSCAN import DBSCAN
-from clusters.kmeans import Kmeans
-from data_structure.data_structure import StaticData
-from metric.metric import calculate_tf_idf, add_value, calculate_purity
+from src.classifier.knn_classifier import KNNClassifier
+from src.classifier.naive_bayes_classifier import NaiveBayesClassifier
+from src.clusters.DBSCAN import DBSCAN
+from src.clusters.kmeans import Kmeans
+from src.data_structure.data_structure import StaticData
+from src.metric.metric import calculate_tf_idf, add_value, calculate_purity
 
 
 def derivative_feature_vectors(_vocabulary):
@@ -35,7 +35,7 @@ def generate_tf_idf_feature(bag_of_features, raw_documents):
     for _document in raw_documents:
         feature_vector = np.zeros(m)
         for feature, col in bag_of_features.items():
-            if feature in _document.tfs['all']:
+            if feature in _document.tfs['all'] and feature in StaticData.df_term.keys():
                 tf = _document.tfs['all'][feature]
                 df = StaticData.df_term[feature]
                 tf_idf = calculate_tf_idf(tf=tf, df=df, doc_num=StaticData.n_train_documents)
@@ -130,20 +130,42 @@ def kmeans_cluster(y_train_original,
                    ):
     kmeans_cluster_ = Kmeans()
     labels = y_train_original
-    purity = []
 
     StaticData.A1 = time.time()
     centroids, cluster_assign = kmeans_cluster_.fit(data_set=feature_matrix, k=k)
-    purity.append(calculate_purity(centroids, cluster_assign, labels, k))
-
     StaticData.kmeans_cluster_time.append(time.time() - StaticData.A1)
     print("Time to cluster: {} s."
           .format(StaticData.kmeans_cluster_time[len(StaticData.kmeans_cluster_time) - 1]))
 
+    print("Compute the purity...")
+    purity = calculate_purity(cluster_assign_=cluster_assign, labels=labels, k=k)
+
     print("\nKmeans Cluster: The number of clusters : k is {}, purity is: {}.".format(k, purity))
 
-    StaticData.kmeans_purity = purity
-    return purity
+    StaticData.kmeans_purity.append(purity)
+    return centroids
+
+
+def assign_to_centroids(centroids, data_set):
+    m = data_set.shape[0]
+    k = centroids.shape[0]
+
+    cluster_assign = -np.ones((m, 2))
+
+    # assign the data point to closest centroid
+    for i in range(m):
+        min_dist = np.inf
+        min_index = cluster_assign[i, 0]
+        for j in range(k):
+            distance = np.linalg.norm(data_set[i, :] - centroids[j, :])
+            if distance < min_dist:
+                min_index = j
+                min_dist = distance
+        if min_index != cluster_assign[i, 0]:
+            cluster_assign[i, 0] = min_index
+            cluster_assign[i, 1] = min_dist
+
+    return cluster_assign
 
 
 def dbscan_cluster(train_feature_matrix,
@@ -152,8 +174,12 @@ def dbscan_cluster(train_feature_matrix,
                    min_pts=5):
     DBSCAN_cluster = DBSCAN(epsilon, min_pts)
     # dbscan_cluster.find_epsilon(train_feature_matrix)
+    A1 = time.time()
     clusters = DBSCAN_cluster.fit(train_feature_matrix)
+    StaticData.DBSCAN_cluster_time.append(time.time() - A1)
+    print("Compute purity...")
     purity = DBSCAN_cluster.calculate_purity(clusters, y_train_original)
+    StaticData.DBSCAN_purity.append(purity)
     return clusters, purity
 
 
@@ -257,8 +283,6 @@ def write_termination_messages(filename):
 # pipeline
 def knn_predict_showcase(feature_vector_1, feature_vector_2, train_documents, test_documents, Y_test_original):
     """ knn predict """
-    print("\n++++++++++ Start predicting ++++++++++")
-    print("Select two classifiers: knn classifier and naive bayes classifier.")
     print("\n========== KNN Classifier ==========")
     print("Select k = 5 as the number of neighbors.")
     print("\nPredict using feature vector 1 ({} cardinality):".format(len(feature_vector_1)))

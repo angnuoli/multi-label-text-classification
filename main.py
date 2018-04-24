@@ -2,10 +2,11 @@ import os
 import time
 from sys import argv
 
-from data_preprocess.preprocess import DataProcessor, MyVectorizer
-from data_structure.data_structure import StaticData
-from mymethods import derivative_feature_vectors, generate_tf_idf_feature, write_to_file, \
-    dbscan_cluster, kmeans_cluster
+from src.data_preprocess.preprocess import DataProcessor, MyVectorizer
+from src.data_structure.data_structure import StaticData
+from src.metric.metric import calculate_purity
+from src.mymethods import derivative_feature_vectors, generate_tf_idf_feature, write_to_file, \
+    dbscan_cluster, kmeans_cluster, assign_to_centroids, knn_predict_showcase, naive_predict_showcase
 
 if __name__ == "__main__":
 
@@ -57,7 +58,17 @@ if __name__ == "__main__":
 
     # compute two feature matrix
     feature_matrix_1 = generate_tf_idf_feature(feature_vector_1, train_documents)
-    feature_matrix_2 = generate_tf_idf_feature(feature_vector_1, train_documents)
+    feature_matrix_2 = generate_tf_idf_feature(feature_vector_2, train_documents)
+    test_feature_matrix_1 = generate_tf_idf_feature(feature_vector_1, test_documents)
+    test_feature_matrix_2 = generate_tf_idf_feature(feature_vector_2, test_documents)
+
+    print("\n++++++++++ Start classifying ++++++++++")
+    print("Select two classifiers: knn classifier and naive bayes classifier.")
+
+    knn_predict_showcase(feature_vector_1, feature_vector_2, train_documents, test_documents, Y_test_original)
+
+    naive_predict_showcase(feature_vector_1, feature_vector_2, vocabulary_, train_documents, test_documents,
+                           Y_test_original)
 
     print("\n++++++++++ Start clustering ++++++++++")
     print("Select two clusters: kmeans cluster and DBSCAN cluster.")
@@ -67,20 +78,30 @@ if __name__ == "__main__":
     # =============================================================================
 
     print("\n========== Kmeans Cluster ==========")
-    print("Select k = 5 as the number of neighbors.")
+    k = 70
+    print("Select k = {} as the number of clusters.".format(k))
     print("\nCluster using feature vector 1 ({} cardinality):".format(len(feature_vector_1)))
     print("")
     StaticData.A1 = time.time()
 
-    kmeans_cluster(y_train_original=Y_train_original,
-                   feature_matrix=feature_matrix_1,
-                   )
+    centroids = kmeans_cluster(y_train_original=Y_train_original,
+                               feature_matrix=feature_matrix_1,
+                               k=k
+                               )
+    clusters_assign = assign_to_centroids(centroids, test_feature_matrix_1)
+    p1 = calculate_purity(cluster_assign_=clusters_assign, labels=Y_test_original, k=k)
+    print("Apply the cluster to test data, the purity is: {}.".format(p1))
 
     print("\nCluster using feature vector 2 ({} cardinality):".format(len(feature_vector_2)))
     StaticData.A1 = time.time()
-    kmeans_cluster(y_train_original=Y_train_original,
-                   feature_matrix=feature_matrix_2,
-                   )
+
+    centroids = kmeans_cluster(y_train_original=Y_train_original,
+                               feature_matrix=feature_matrix_2,
+                               k=k
+                               )
+    clusters_assign = assign_to_centroids(centroids, test_feature_matrix_2)
+    p1 = calculate_purity(cluster_assign_=clusters_assign, labels=Y_test_original, k=k)
+    print("Apply the cluster to test data, the purity is: {}.".format(p1))
 
     # =============================================================================
     #   DBSCAN clustering
@@ -98,14 +119,9 @@ if __name__ == "__main__":
     clusters, p = dbscan_cluster(train_feature_matrix=feature_matrix_1, y_train_original=Y_train_original,
                                  epsilon=epsilon, min_pts=min_pts)
     print("Time to cluster: {} s."
-          .format(time.time() - StaticData.A1))
+          .format(StaticData.DBSCAN_cluster_time[len(StaticData.DBSCAN_cluster_time)-1]))
     print("The purity is {}.".format(p))
     print("clusters num: {}".format(len(clusters)))
-
-    #    sum = 0
-    #    for i in clusters.values():
-    #        sum += len(i)
-    # print("Sum is {}".format(sum))
 
     StaticData.edges = {}
 
@@ -119,11 +135,23 @@ if __name__ == "__main__":
     clusters, p = dbscan_cluster(train_feature_matrix=feature_matrix_2, y_train_original=Y_train_original,
                                  epsilon=epsilon, min_pts=min_pts)
     print("Time to cluster: {} s."
-          .format(time.time() - StaticData.A1))
+          .format(StaticData.DBSCAN_cluster_time[len(StaticData.DBSCAN_cluster_time) - 1]))
     print("The purity is {}.".format(p))
     print("clusters num: {}".format(len(clusters)))
 
-#    sum = 0
-#    for i in clusters.values():
-#        sum += len(i)
-#    # print("Sum is {}".format(sum))
+    print("\n========== Termination message ==========")
+    print("Mission completed.")
+    print("We select kmeans and DBSCAN cluster.")
+    print("\nFor feature vector with {} cardinality:".format(len(feature_vector_1)))
+    print("\nThe purity of kmeans cluster is {}.".format(StaticData.kmeans_purity[0]))
+    print("The efficient cost of kmeans cluster is {} s.".format(StaticData.kmeans_cluster_time[0]))
+
+    print("\nThe purity of DBSCAN cluster is {}.".format(StaticData.DBSCAN_purity[0]))
+    print("The efficient cost of DBSCAN cluster is {} s.".format(StaticData.DBSCAN_cluster_time[0]))
+
+    print("\nFor feature vector with {} cardinality:".format(len(feature_vector_2)))
+    print("\nThe purity of kmeans cluster is {}.".format(StaticData.kmeans_purity[1]))
+    print("The efficient cost of kmeans cluster is {} s.".format(StaticData.kmeans_cluster_time[1]))
+
+    print("\nThe purity of DBSCAN cluster is {}.".format(StaticData.DBSCAN_purity[1]))
+    print("The efficient cost of DBSCAN cluster is {} s.".format(StaticData.DBSCAN_cluster_time[1]))

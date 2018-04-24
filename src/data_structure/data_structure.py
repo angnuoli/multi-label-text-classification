@@ -71,12 +71,14 @@ class StaticData:
     naive_build_time = []
     naive_predict_time = []
     kmeans_cluster_time = []
+    DBSCAN_cluster_time = []
     A1 = 0.0
 
     """ accuracy """
     knn_accuracy = []
     naiver_accuracy = []
     kmeans_purity = []
+    DBSCAN_purity = []
 
     """ find good parameter """
     dbscan_k_distance = []

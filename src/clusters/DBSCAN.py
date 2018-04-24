@@ -2,8 +2,7 @@ from random import choice
 
 import numpy as np
 
-from data_structure.data_structure import StaticData
-from metric.metric import euclidean
+from src.data_structure.data_structure import StaticData
 
 
 class DBSCAN:
@@ -24,7 +23,7 @@ class DBSCAN:
 
         for i in range(m):
             for j in range(i + 1, m):
-                k_distance.append(euclidean(X[i], X[j]))
+                k_distance.append(np.linalg.norm(X[i] - X[j]))
 
         k_distance = sorted(k_distance)
         StaticData.dbscan_k_distance = k_distance
@@ -46,7 +45,15 @@ class DBSCAN:
             for i in range(m):
                 edges[i] = {}
 
+            gap = m / 10
+            count = gap
+            k = 0
             for i in range(m):
+                count -= 1
+                if count <= 0 and k < 10:
+                    k += 1
+                    count = gap
+                    print("{}%  is finished".format(k * 10))
                 for j in range(i + 1, m):
                     edges[j][i] = edges[i][j] = np.linalg.norm(X[i] - X[j])
 
@@ -57,8 +64,9 @@ class DBSCAN:
         for i in range(m):
             edges[i] = {}
 
+        print("Get the core points set...")
         for i in range(m):
-            for j in range(i+1, m):
+            for j in range(i + 1, m):
                 if StaticData.edges[i][j] <= self.epsilon:
                     edges[j][i] = edges[i][j] = StaticData.edges[i][j]
 
@@ -110,6 +118,7 @@ class DBSCAN:
             unvisited.add(i)
         clusters = {}
 
+        print("Generate clusters...")
         while len(core_points) != 0:
             k_core_point = choice(list(core_points))
             cluster_k = set()

@@ -10,9 +10,9 @@ import string
 
 import numpy as np
 
-from data_structure.data_structure import Document, StaticData
-from metric.metric import calculate_ichi_metric, calculate_static_data, add_value
-from mymethods import write_to_file
+from src.data_structure.data_structure import StaticData, Document
+from src.metric.metric import add_value, calculate_static_data, calculate_ichi_metric
+from src.mymethods import write_to_file
 
 
 class MyVectorizer:

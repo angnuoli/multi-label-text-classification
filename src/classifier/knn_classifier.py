@@ -2,8 +2,8 @@ import queue
 
 import numpy as np
 
-from data_structure.data_structure import StaticData
-from metric.metric import calculate_tf_idf, add_value
+from src.data_structure.data_structure import StaticData
+from src.metric.metric import calculate_tf_idf, add_value
 
 
 class KNNClassifier:
