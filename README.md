@@ -1,6 +1,6 @@
 # Description
 
-This project is for multi-label text classification. The dataset is reuter-21578.
+This project is for multi-label text classification. Also, we use kmeans and DBSCAN clusters.
 
 # To run the program:
 
@@ -49,7 +49,7 @@ It will output following files. Other information will be print to System.out.
    Short view (unordered, because it is stored in dict):
 
    ```bash
-   loss,revs,profit,company,shares,note,year,dollar,tonnes,rate,bank,corp,unemployment,march,deficit,barrels,dlrs,rates,reuter,buffer,agriculture,growth,money,record,acquisition,japan,icco,dividend,beef,aluminium,soybeans,offer,account,stake,billion,...
+   loss,revs,profit,company,shares,note,year,dollar,tonnes,rate,bank,corp,unemployment,march,deficit,barrels,dlrs,rates,buffer,agriculture,growth,money,record,acquisition,japan,icco,dividend,beef,aluminium,soybeans,offer,account,stake,billion,...
    ```
 
 4. KNN_predict_class_labels_125_feature_vector.txt
@@ -140,7 +140,7 @@ Termination messages is given.
 
 `data_structure.py` in `/data_structure`defines document objects and static statistic data we would use in building models and predicting class labels.
 
-`preprocess.py` in `/data_preprocess` module is to read data from reuter-21578, parser text data, translate them into list of document objects which has the class labels and feature vector. Then, tokenize the words and construct a list of class labels and bag of terms. 
+`preprocess.py` in `/data_preprocess` module is to read data from dataset, parser text data, translate them into list of document objects which has the class labels and feature vector. Then, tokenize the words and construct a list of class labels and bag of terms.
 
 `metric.py` in `/metric defines` importance metric for feature selection.
 
@@ -194,7 +194,7 @@ In this project, I design two derivative of selected feature vector. One feature
 
 ## Classification
 
- I select two classifiers in this lab: knn classifier and Naive Bayes classifier.
+ I select two classifiers: knn classifier and Naive Bayes classifier.
 
 ### knn classifier
 
